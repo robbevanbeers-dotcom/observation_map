@@ -57,13 +57,13 @@ m = folium.Map(
 # Add Path & Start/End
 if trajectory:
     path_layer = folium.FeatureGroup(name="Trajectory", control=False).add_to(m)
-    folium.PolyLine(trajectory, color="white", weight=2, opacity=0.5, dash_array='5').add_to(path_layer)
+    folium.PolyLine(trajectory, color="#1e3799", weight=4, opacity=0.8, dash_array='5').add_to(path_layer)
     folium.Marker(trajectory[0], icon=folium.Icon(color='green', icon='play'), interactive=False).add_to(path_layer)
     folium.Marker(trajectory[-1], icon=folium.Icon(color='red', icon='stop'), interactive=False).add_to(path_layer)
 
 # Species Groups & Clustering
 mc = MarkerCluster(options={'showCoverageOnHover': False, 'spiderfyOnMaxZoom': True, 'disableClusteringAtZoom': 17}).add_to(m)
-colors = {'Vogels': '#ff4757', 'Planten': '#2ed573', 'Reptielen en amfibieën': '#ffa502'}
+colors = {'Vogels': '#c0392b', 'Planten': '#1e8449', 'Reptielen en amfibieën': '#d35400'}
 
 for group_name, group_df in df.groupby('species group'):
     sub_group = FeatureGroupSubGroup(mc, group_name)
@@ -74,8 +74,12 @@ for group_name, group_df in df.groupby('species group'):
         popup_html = f'<div style="font-family:Arial; width:180px;"><b style="color:{color}">{row["species name"]}</b><br><a href="{row["link"]}" target="_blank">View Record ↗</a></div>'
         folium.CircleMarker(
             location=[row['lat'], row['lng']],
-            radius=6, color='white', weight=1, fill=True,
-            fill_color=color, fill_opacity=0.9,
+            radius=6, 
+            color='#2c3e50',  # Donkergrijze rand ipv wit voor meer contrast
+            weight=1.5,       # Iets dikkere rand
+            fill=True,
+            fill_color=color, 
+            fill_opacity=0.85, # Iets minder transparant zodat de kleur 'knalt'
             popup=folium.Popup(popup_html, max_width=250)
         ).add_to(sub_group)
 
@@ -86,7 +90,7 @@ st_folium(m, width=1400, height=600, returned_objects=[])
 
 # 5. Observation List Section (Simplified Data Table)
 st.divider()
-st.subheader("📋 Observation List")
+st.subheader("📋 Lijst met observaties")
 
 # We create a simplified version of the dataframe for display
 # We use st.column_config to make the 'link' column a clickable button

@@ -57,7 +57,7 @@ m = folium.Map(
 # Add Path & Start/End
 if trajectory:
     path_layer = folium.FeatureGroup(name="Trajectory", control=False).add_to(m)
-    folium.PolyLine(trajectory, color="#1e3799", weight=4, opacity=0.8, dash_array='5').add_to(path_layer)
+    folium.PolyLine(trajectory, color="#3498db", weight=4, opacity=0.8, dash_array='5').add_to(path_layer)
     folium.Marker(trajectory[0], icon=folium.Icon(color='green', icon='play'), interactive=False).add_to(path_layer)
     folium.Marker(trajectory[-1], icon=folium.Icon(color='red', icon='stop'), interactive=False).add_to(path_layer)
 

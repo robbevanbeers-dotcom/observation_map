@@ -41,11 +41,17 @@ st.title("📍 Lovenhoek - Excursie voorjaarsbloeiers")
 st.markdown("Bekijk het traject en de observaties van de excursie op 25 april 2026.")
 
 # 4. Map Section
+# m = folium.Map(
+#     location=[df.lat.mean(), df.lng.mean()], 
+#     zoom_start=16, max_zoom=18,
+#     tiles='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+#     attr='Esri Satellite'
+# )
+
 m = folium.Map(
     location=[df.lat.mean(), df.lng.mean()], 
     zoom_start=16, max_zoom=18,
-    tiles='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    attr='Esri Satellite'
+    tiles='OpenStreetMap'
 )
 
 # Add Path & Start/End

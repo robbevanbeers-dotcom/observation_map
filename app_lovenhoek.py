@@ -6,7 +6,7 @@ import re
 from streamlit_folium import st_folium
 
 # 1. Page Configuration
-st.set_page_config(page_title="Lovenhoek Field Session", layout="wide")
+st.set_page_config(page_title="Lovenhoek Excursie", layout="wide")
 
 # 2. Helper: Extract trajectory from KML
 def extract_trajectory(kml_path):
@@ -37,8 +37,8 @@ def load_all_data():
 df, trajectory = load_all_data()
 
 # --- APP LAYOUT ---
-st.title("📍 Lovenhoek Biological Field Session")
-st.markdown("Explore the trajectory and observations from the April 25th session.")
+st.title("📍 Lovenhoek - Excursie voorjaarsbloeiers")
+st.markdown("Bekijk het traject en de observaties van de excursie op 25 april 2026.")
 
 # 4. Map Section
 m = folium.Map(

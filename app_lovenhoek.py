@@ -28,7 +28,6 @@ KML_FILE = 'observation-2026-04-27-09-42-sessie-2026-04-25-271055.kml'
 @st.cache_data
 def load_all_data():
     df = pd.read_excel(EXCEL_FILE)
-    # Sort by time for the table
     df['timestamp'] = pd.to_datetime(df['date'] + ' ' + df['time'])
     df = df.sort_values('timestamp')
     trajectory = extract_trajectory(KML_FILE)
@@ -38,19 +37,13 @@ df, trajectory = load_all_data()
 
 # --- APP LAYOUT ---
 st.title("📍 Lovenhoek - Excursie voorjaarsbloeiers")
-st.markdown("Bekijk het traject en de observaties van de excursie op 25 april 2026.")
 
 # 4. Map Section
-# m = folium.Map(
-#     location=[df.lat.mean(), df.lng.mean()], 
-#     zoom_start=16, max_zoom=18,
-#     tiles='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-#     attr='Esri Satellite'
-# )
-
+# Fix for Point 3: Use use_container_width=True and fit_bounds
 m = folium.Map(
     location=[df.lat.mean(), df.lng.mean()], 
-    zoom_start=16, max_zoom=18,
+    zoom_start=15, 
+    max_zoom=19,
     tiles='OpenStreetMap'
 )
 
@@ -60,10 +53,39 @@ if trajectory:
     folium.PolyLine(trajectory, color="#3498db", weight=4, opacity=0.8, dash_array='5').add_to(path_layer)
     folium.Marker(trajectory[0], icon=folium.Icon(color='green', icon='play'), interactive=False).add_to(path_layer)
     folium.Marker(trajectory[-1], icon=folium.Icon(color='red', icon='stop'), interactive=False).add_to(path_layer)
+    # Ensure the map fits the whole track on start (Good for mobile)
+    m.fit_bounds(trajectory)
 
-# Species Groups & Clustering
+# Fix for Point 1: Distinct Colors
+# Changed Birds to a vibrant blue and Reptiles to a bright orange
+colors = {
+    'Vogels': '#0077b6',                # Deep Ocean Blue
+    'Planten': '#2d6a4f',               # Forest Green
+    'Reptielen en amfibieën': '#f3722c'  # Bright Orange
+}
+
+# Fix for Point 2: Zoom-dependent labels
+# We use a Tooltip with 'permanent=True' and a CSS trick to hide it at low zoom levels
+label_css = """
+<style>
+    .leaflet-tooltip.zoom-label {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        font-weight: bold;
+        color: #2c3e50;
+        text-shadow: 1px 1px 1px #fff;
+        font-size: 12px;
+    }
+    /* Hide labels when zoom is less than 17 */
+    .leaflet-zoom-animated:not(.leaflet-zoom-17):not(.leaflet-zoom-18):not(.leaflet-zoom-19) .zoom-label {
+        display: none;
+    }
+</style>
+"""
+m.get_root().header.add_child(folium.Element(label_css))
+
 mc = MarkerCluster(options={'showCoverageOnHover': False, 'spiderfyOnMaxZoom': True, 'disableClusteringAtZoom': 17}).add_to(m)
-colors = {'Vogels': '#c0392b', 'Planten': '#1e8449', 'Reptielen en amfibieën': '#d35400'}
 
 for group_name, group_df in df.groupby('species group'):
     sub_group = FeatureGroupSubGroup(mc, group_name)
@@ -72,39 +94,39 @@ for group_name, group_df in df.groupby('species group'):
     
     for _, row in group_df.iterrows():
         popup_html = f'<div style="font-family:Arial; width:180px;"><b style="color:{color}">{row["species name"]}</b><br><a href="{row["link"]}" target="_blank">View Record ↗</a></div>'
+        
         folium.CircleMarker(
             location=[row['lat'], row['lng']],
-            radius=6, 
-            color='#2c3e50',  # Donkergrijze rand ipv wit voor meer contrast
-            weight=1.5,       # Iets dikkere rand
+            radius=7, 
+            color='#ffffff', 
+            weight=2,        
             fill=True,
             fill_color=color, 
-            fill_opacity=0.85, # Iets minder transparant zodat de kleur 'knalt'
-            popup=folium.Popup(popup_html, max_width=250)
+            fill_opacity=1.0,
+            popup=folium.Popup(popup_html, max_width=250),
+            # This tooltip becomes visible when zooming in
+            tooltip=folium.Tooltip(row["species name"], permanent=True, direction='top', className="zoom-label")
         ).add_to(sub_group)
 
 folium.LayerControl(collapsed=False).add_to(m)
 
-# Display Map
-st_folium(m, width=1400, height=600, returned_objects=[])
+# Fix for Point 3: Sizing
+# Removed fixed width=1400. use_container_width=True makes it responsive on phones.
+st_folium(m, use_container_width=True, height=500, returned_objects=[])
 
-# 5. Observation List Section (Simplified Data Table)
+# 5. Observation List
 st.divider()
 st.subheader("📋 Lijst met observaties")
 
-# We create a simplified version of the dataframe for display
-# We use st.column_config to make the 'link' column a clickable button
 display_df = df[['time', 'species name', 'scientific name', 'species group', 'number', 'link']].copy()
-
 st.dataframe(
     display_df,
     column_config={
-        "time": "Time",
-        "species name": "Common Name",
-        "scientific name": "Scientific Name",
-        "species group": "Group",
-        "number": "Count",
-        "link": st.column_config.LinkColumn("Observation Link")
+        "time": "Tijd",
+        "species name": "Naam",
+        "scientific name": "Wetenschappelijk",
+        "species group": "Groep",
+        "link": st.column_config.LinkColumn("Link")
     },
     hide_index=True,
     use_container_width=True
